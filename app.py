@@ -10,7 +10,7 @@ import google.generativeai as genai
 # ==========================================
 # 0. GEMINI API CONFIGURATION
 # ==========================================
-GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]  # Thay khóa API thật của bạn vào đây
+GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"] 
 genai.configure(api_key=GEMINI_API_KEY)
 
 def get_ai_lifestyle_advice(prediction_label, age, gender, occupation, sleep_hours, stress_level, anxiety_score, depression_score):
@@ -28,11 +28,13 @@ def get_ai_lifestyle_advice(prediction_label, age, gender, occupation, sleep_hou
     Provide recommendations using clear headings with emojis, concise explanations, and professional wellness tips. Do not mention any commercial AI brand names.
     """
     try:
-        ai_model = genai.GenerativeModel("gemini-3.8-flash")
+        ai_model = genai.GenerativeModel("gemini-1.5-flash") # Cập nhật model name chuẩn tránh lỗi không tồn tại
         response = ai_model.generate_content(prompt)
         return response.text
     except Exception as e:
-        return f"⚠️ Unable to generate dynamic AI advice. Please check your API key configuration. (Error: {e})"# ==========================================
+        return f"⚠️ Unable to dynamic AI advice. (Error: {e})"
+
+# ==========================================
 # 1. PAGE CONFIGURATION & CUSTOM CSS
 # ==========================================
 st.set_page_config(
@@ -89,13 +91,14 @@ st.markdown(
 )
 
 # ==========================================
-# 2. LOAD MODELS
+# 2. LOAD MODELS (FIXED PATH FOR CLOUD)
 # ==========================================
 @st.cache_resource
 def load_model():
-    MY_FOLDER = r"C:\Users\ADMIN\MethalHealthApp" 
-    model_path = os.path.join(MY_FOLDER, 'best_mental_health_model.pkl')
-    le_path = os.path.join(MY_FOLDER, 'label_encoder.pkl')
+    # Sử dụng đường dẫn tương đối để chạy mượt mà cả trên máy lẫn trên Streamlit Cloud
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    model_path = os.path.join(current_dir, 'best_mental_health_model.pkl')
+    le_path = os.path.join(current_dir, 'label_encoder.pkl')
     
     model = joblib.load(model_path)
     le = joblib.load(le_path)
@@ -276,9 +279,11 @@ if model is not None:
               st.progress(float(probs[idx]))
 
           # ==========================================
-          # 8. DATABASE INTEGRATION (C# BACKEND)
+          # 8. DATABASE INTEGRATION (AZURE C# BACKEND)
           # ==========================================
-          api_endpoint = "http://localhost:5188/api/ScreeningAPI/Save"
+          # Đổi từ localhost sang đường dẫn Azure App Service của bạn
+          api_endpoint = "https://metnalhealth-h2gccagga6d4hta6.eastasia-01.azurewebsites.net/api/ScreeningAPI/Save"
+          
           payload = {
               "UserId": 1,
               "PatientName": str(patient_name),
@@ -294,13 +299,13 @@ if model is not None:
           }
 
           try:
-            response = requests.post(api_endpoint, json=payload, timeout=2)
+            response = requests.post(api_endpoint, json=payload, timeout=5)
             if response.status_code == 200:
               st.success("✅ Assessment saved successfully as a new patient record (Longitudinal tracking updated)!")
             else:
               st.warning(f"⚠️ Server rejected request (Status Code: {response.status_code})")
           except requests.exceptions.RequestException:
-            st.caption("ℹ️ *Note: Backend offline, record stored locally only.*")
+            st.caption("ℹ️ *Note: Backend offline or network block, record stored locally only.*")
 
         except Exception as e:
           st.error(f"Error executing prediction: {e}")
