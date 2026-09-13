@@ -28,7 +28,7 @@ def get_ai_lifestyle_advice(prediction_label, age, gender, occupation, sleep_hou
     Provide recommendations using clear headings with emojis, concise explanations, and professional wellness tips. Do not mention any commercial AI brand names.
     """
     try:
-        ai_model = genai.GenerativeModel("gemini-3.8-flash") # Cập nhật model name chuẩn tránh lỗi không tồn tại
+        ai_model = genai.GenerativeModel("gemini-3.5-flash-lite") # Cập nhật model name chuẩn tránh lỗi không tồn tại
         response = ai_model.generate_content(prompt)
         return response.text
     except Exception as e:
