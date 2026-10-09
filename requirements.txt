@@ -12,3 +12,5 @@ langchain-community
 langchain-core
 faiss-cpu
 sentence-transformers
+torch
+torchvision
